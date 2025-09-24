@@ -1,0 +1,114 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "Classic Roast",
+      "price": 1200.0,
+      "image": "assets/1.png",
+      "category": "Coffee",
+      "description": "A rich, full-bodied coffee with hints of chocolate and caramel. Perfect for starting your day with energy and flavor.",
+      "tastingNotes": "Chocolate, Caramel, Smooth finish",
+      "roastLevel": "Medium",
+      "origin": "Colombia",
+      "rating": 4.5,
+      "inStock": true
+    },
+    {
+      "id": "2",
+      "name": "Dark Espresso",
+      "price": 1400.0,
+      "image": "assets/2.png",
+      "category": "Coffee",
+      "description": "Intense and bold espresso blend with a rich crema. Ideal for espresso lovers who enjoy strong, concentrated flavors.",
+      "tastingNotes": "Dark Chocolate, Nutty, Bold",
+      "roastLevel": "Dark",
+      "origin": "Brazil",
+      "rating": 4.7,
+      "inStock": true
+    },
+    {
+      "id": "3",
+      "name": "Vanilla Latte",
+      "price": 1600.0,
+      "image": "assets/3.png",
+      "category": "Specialty",
+      "description": "Smooth latte with premium vanilla flavoring. A perfect balance of espresso and steamed milk with sweet vanilla notes.",
+      "tastingNotes": "Vanilla, Creamy, Sweet",
+      "roastLevel": "Medium",
+      "origin": "Ethiopia",
+      "rating": 4.3,
+      "inStock": true
+    },
+    {
+      "id": "4",
+      "name": "Hazelnut Brew",
+      "price": 1550.0,
+      "image": "assets/4.png",
+      "category": "Specialty",
+      "description": "Aromatic coffee infused with natural hazelnut flavoring. A delightful combination of coffee and nutty sweetness.",
+      "tastingNotes": "Hazelnut, Nutty, Aromatic",
+      "roastLevel": "Medium-Light",
+      "origin": "Guatemala",
+      "rating": 4.4,
+      "inStock": true
+    },
+    {
+      "id": "5",
+      "name": "Cappuccino Supreme",
+      "price": 1300.0,
+      "image": "assets/5.jpg",
+      "category": "Classic",
+      "description": "Traditional cappuccino with perfect foam texture. Equal parts espresso, steamed milk, and milk foam.",
+      "tastingNotes": "Creamy, Balanced, Classic",
+      "roastLevel": "Medium",
+      "origin": "Italy Blend",
+      "rating": 4.6,
+      "inStock": true
+    },
+    {
+      "id": "6",
+      "name": "Mocha Delight",
+      "price": 1700.0,
+      "image": "assets/6.jpg",
+      "category": "Specialty",
+      "description": "Rich chocolate and coffee combination. Perfect for those who love the marriage of coffee and chocolate flavors.",
+      "tastingNotes": "Chocolate, Coffee, Rich",
+      "roastLevel": "Medium-Dark",
+      "origin": "Ecuador",
+      "rating": 4.8,
+      "inStock": false
+    },
+    {
+      "id": "7",
+      "name": "French Roast",
+      "price": 1350.0,
+      "image": "assets/7.jpg",
+      "category": "Coffee",
+      "description": "Traditional French roast with smoky and intense flavors. A classic choice for those who prefer dark, bold coffee.",
+      "tastingNotes": "Smoky, Intense, Bold",
+      "roastLevel": "Dark",
+      "origin": "French Blend",
+      "rating": 4.2,
+      "inStock": true
+    },
+    {
+      "id": "8",
+      "name": "Iced Coffee Special",
+      "price": 1100.0,
+      "image": "assets/8.jpg",
+      "category": "Cold Brew",
+      "description": "Refreshing cold brew coffee perfect for hot days. Smooth, less acidic, and naturally sweet.",
+      "tastingNotes": "Smooth, Refreshing, Sweet",
+      "roastLevel": "Medium",
+      "origin": "Costa Rica",
+      "rating": 4.1,
+      "inStock": true
+    }
+  ],
+  "categories": [
+    {"id": "1", "name": "Coffee", "icon": "local_cafe"},
+    {"id": "2", "name": "Specialty", "icon": "star"},
+    {"id": "3", "name": "Classic", "icon": "favorite"},
+    {"id": "4", "name": "Cold Brew", "icon": "ac_unit"}
+  ]
+}

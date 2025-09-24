@@ -108,17 +108,17 @@ class CartScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Checkout functionality coming soon!',
-                              ),
-                            ),
-                          );
+                          Navigator.pushNamed(context, '/checkout');
                         },
-                        child: const Text('Checkout'),
+                        icon: const Icon(Icons.shopping_bag),
+                        label: const Text('Checkout'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
                       ),
                     ),
                   ],

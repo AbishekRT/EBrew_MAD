@@ -25,6 +25,7 @@ import 'screens/settings_screen.dart';
 import 'screens/sensor_demo_screen.dart';
 import 'screens/camera_demo_screen.dart';
 import 'screens/location_details_screen.dart';
+import 'screens/checkout_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +78,7 @@ class MyApp extends StatelessWidget {
               '/sensor-demo': (context) => const SensorDemoScreen(),
               '/camera-demo': (context) => const CameraDemoScreen(),
               '/location-details': (context) => const LocationDetailsScreen(),
+              '/checkout': (context) => const CheckoutPage(),
             },
           );
         },

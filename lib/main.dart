@@ -111,6 +111,10 @@ class _AppWrapperState extends State<AppWrapper> {
         context,
         listen: false,
       );
+      final productProvider = Provider.of<ProductProvider>(
+        context,
+        listen: false,
+      );
       final connectivityService = Provider.of<ConnectivityService>(
         context,
         listen: false,
@@ -119,6 +123,7 @@ class _AppWrapperState extends State<AppWrapper> {
 
       // Load products data
       await productService.loadProducts();
+      await productProvider.loadProducts();
 
       // Initialize connectivity monitoring
       await connectivityService.initialize();

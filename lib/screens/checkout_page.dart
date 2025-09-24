@@ -70,11 +70,12 @@ class _CheckoutPageState extends State<CheckoutPage>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/home',
-            (route) => false,
-          ),
+          onPressed:
+              () => Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/home',
+                (route) => false,
+              ),
         ),
       ),
       body: FadeTransition(
@@ -86,7 +87,7 @@ class _CheckoutPageState extends State<CheckoutPage>
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final isWideScreen = constraints.maxWidth > 600;
-                
+
                 if (isWideScreen) {
                   return Row(
                     children: [
@@ -96,12 +97,18 @@ class _CheckoutPageState extends State<CheckoutPage>
                     ],
                   );
                 } else {
-                  return Column(
-                    children: [
-                      Expanded(child: _buildMessageSection()),
-                      const SizedBox(height: 20),
-                      _buildIllustrationSection(),
-                    ],
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildMessageSection(),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          height: 200, // Fixed height for image in portrait
+                          child: _buildIllustrationSection(),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   );
                 }
               },
@@ -116,8 +123,9 @@ class _CheckoutPageState extends State<CheckoutPage>
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         final user = authProvider.user;
-        
-        return Center(
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +144,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Main Title
               Text(
                 'Your brew is on its way! ☕',
@@ -146,7 +154,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Thank you message
               RichText(
                 text: TextSpan(
@@ -164,13 +172,14 @@ class _CheckoutPageState extends State<CheckoutPage>
                       ),
                     ),
                     const TextSpan(
-                      text: '! We\'re preparing your fresh coffee and it\'ll be delivered right to your doorstep.',
+                      text:
+                          '! We\'re preparing your fresh coffee and it\'ll be delivered right to your doorstep.',
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Additional message
               Text(
                 'Every bean is roasted with care. Until it arrives, feel free to explore more blends and flavors curated just for you.',
@@ -180,7 +189,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                 ),
               ),
               const SizedBox(height: 32),
-              
+
               // Action Button
               SizedBox(
                 width: double.infinity,
@@ -208,7 +217,7 @@ class _CheckoutPageState extends State<CheckoutPage>
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Secondary Action
               SizedBox(
                 width: double.infinity,
@@ -248,46 +257,49 @@ class _CheckoutPageState extends State<CheckoutPage>
         constraints: const BoxConstraints(maxWidth: 400),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
-          child: Image.asset(
-            'assets/B3.jpg',
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.brown[100],
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD7CCC8)),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.local_cafe,
-                      size: 80,
-                      color: Colors.brown[300],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Thank You!',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.brown[600],
+          child: AspectRatio(
+            aspectRatio: 16 / 9, // Fixed aspect ratio
+            child: Image.asset(
+              'assets/B3.jpg',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.brown[100],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFD7CCC8)),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.local_cafe,
+                        size: 80,
+                        color: Colors.brown[300],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Your order is confirmed',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.brown[500],
+                      const SizedBox(height: 16),
+                      Text(
+                        'Thank You!',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.brown[600],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                      const SizedBox(height: 8),
+                      Text(
+                        'Your order is confirmed',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.brown[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

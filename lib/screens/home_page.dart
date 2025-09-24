@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_nav.dart';
-import '../services/product_service.dart';
+import '../providers/product_provider.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../services/connectivity_service.dart';
@@ -146,10 +146,10 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Featured Products from ProductService
-            Consumer<ProductService>(
-              builder: (context, productService, child) {
-                final featuredProducts = productService.getFeaturedProducts();
+            // Featured Products from ProductProvider
+            Consumer<ProductProvider>(
+              builder: (context, productProvider, child) {
+                final featuredProducts = productProvider.featuredProducts;
 
                 if (featuredProducts.isEmpty) {
                   return const Padding(
@@ -160,41 +160,23 @@ class HomePage extends StatelessWidget {
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child:
-                      isLandscape || isWide
-                          ? GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 16,
-                                  crossAxisSpacing: 16,
-                                  childAspectRatio: 4 / 3,
-                                ),
-                            itemCount: featuredProducts.length,
-                            itemBuilder:
-                                (context, index) => _buildProductCard(
-                                  featuredProducts[index],
-                                  isDarkMode,
-                                ),
-                          )
-                          : Column(
-                            children:
-                                featuredProducts
-                                    .map(
-                                      (product) => Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 12,
-                                        ),
-                                        child: _buildProductCard(
-                                          product,
-                                          isDarkMode,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                          ),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isLandscape || isWide ? 3 : 2,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio:
+                          0.75, // Portrait aspect ratio for images
+                    ),
+                    itemCount: featuredProducts.length,
+                    itemBuilder:
+                        (context, index) => _buildProductCard(
+                          featuredProducts[index],
+                          isDarkMode,
+                        ),
+                  ),
                 );
               },
             ),
@@ -255,8 +237,11 @@ class HomePage extends StatelessWidget {
       builder: (context, cartProvider, child) {
         return GestureDetector(
           onTap: () {
-            cartProvider.setSelectedProduct(product);
-            Navigator.pushNamed(context, '/product-detail');
+            Navigator.pushNamed(
+              context,
+              '/product-detail',
+              arguments: product.id,
+            );
           },
           child: Card(
             color:
@@ -268,87 +253,99 @@ class HomePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  child: Image.asset(
-                    product.image,
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 120,
-                        width: double.infinity,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.local_cafe, size: 50),
-                      );
-                    },
+                Expanded(
+                  flex: 3, // Give more space to image
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: Image.asset(
+                      product.image,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.local_cafe, size: 50),
+                        );
+                      },
+                    ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 10,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Rs. ${product.price.toStringAsFixed(0)}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red[600],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.star, size: 16, color: Colors.amber[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            product.rating.toString(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color:
-                                  isDarkMode
-                                      ? Colors.orange[200]
-                                      : Colors.brown[700],
-                            ),
+                Expanded(
+                  flex: 2, // Give less space to text content
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          product.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const Spacer(),
-                          if (!product.inStock)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Out of Stock',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.red[600],
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Rs. ${product.price.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[600],
                               ),
                             ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  size: 14,
+                                  color: Colors.amber[600],
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  product.rating.toString(),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.orange[200]
+                                            : Colors.brown[700],
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (!product.inStock)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 1,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                    child: Text(
+                                      'Out',
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        color: Colors.red[600],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

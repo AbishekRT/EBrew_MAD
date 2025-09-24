@@ -19,10 +19,26 @@ class _ProductDetail extends State<ProductDetail> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Get product ID from route arguments
-    final String? productId = ModalRoute.of(context)?.settings.arguments as String?;
+    final String? productId =
+        ModalRoute.of(context)?.settings.arguments as String?;
     if (productId != null) {
-      final productProvider = Provider.of<ProductProvider>(context, listen: false);
-      product = productProvider.getProductById(productId);
+      final productProvider = Provider.of<ProductProvider>(
+        context,
+        listen: false,
+      );
+
+      // Load products if not already loaded
+      if (productProvider.products.isEmpty && !productProvider.isLoading) {
+        productProvider.loadProducts().then((_) {
+          if (mounted) {
+            setState(() {
+              product = productProvider.getProductById(productId);
+            });
+          }
+        });
+      } else {
+        product = productProvider.getProductById(productId);
+      }
     }
   }
 
@@ -35,12 +51,12 @@ class _ProductDetail extends State<ProductDetail> {
   void _addToCart() {
     if (product != null) {
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
-      
+
       // Add to cart with specified quantity
       for (int i = 0; i < quantity; i++) {
         cartProvider.addToCart(product!);
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${product!.name} (×$quantity) added to cart'),
@@ -60,12 +76,12 @@ class _ProductDetail extends State<ProductDetail> {
   void _buyNow() {
     if (product != null) {
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
-      
+
       // Add to cart first
       for (int i = 0; i < quantity; i++) {
         cartProvider.addToCart(product!);
       }
-      
+
       // Navigate to checkout
       Navigator.pushNamed(context, '/checkout');
     }
@@ -73,49 +89,103 @@ class _ProductDetail extends State<ProductDetail> {
 
   @override
   Widget build(BuildContext context) {
-    if (product == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Product Details")),
-        body: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red),
-              SizedBox(height: 16),
-              Text('Product not found'),
-            ],
-          ),
-        ),
-      );
-    }
+    return Consumer<ProductProvider>(
+      builder: (context, productProvider, child) {
+        // Show loading while products are being fetched
+        if (productProvider.isLoading) {
+          return Scaffold(
+            appBar: AppBar(title: const Text("Product Details")),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
+        // Show error if there was an error loading products
+        if (productProvider.error != null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text("Product Details")),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+                  const SizedBox(height: 16),
+                  Text('Error loading products'),
+                  const SizedBox(height: 8),
+                  Text(productProvider.error!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => productProvider.loadProducts(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Try to get product if we don't have it yet
+        if (product == null) {
+          final String? productId =
+              ModalRoute.of(context)?.settings.arguments as String?;
+          if (productId != null) {
+            product = productProvider.getProductById(productId);
+          }
+        }
+
+        // Show not found if product still null
+        if (product == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text("Product Details")),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text('Product not found'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return _buildProductDetails();
+      },
+    );
+  }
+
+  Widget _buildProductDetails() {
     final isWideScreen = MediaQuery.of(context).size.width > 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(product!.name),
-      ),
+      appBar: AppBar(title: Text(product!.name)),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: isWideScreen
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildImage()),
-                  const SizedBox(width: 24),
-                  Expanded(child: _buildDetails()),
-                ],
-              )
-            : SingleChildScrollView(
-                child: Column(
+        child:
+            isWideScreen
+                ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildImage(),
-                    const SizedBox(height: 16),
-                    _buildDetails(),
+                    Expanded(child: _buildImage()),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildDetails()),
                   ],
+                )
+                : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildImage(),
+                      const SizedBox(height: 16),
+                      _buildDetails(),
+                    ],
+                  ),
                 ),
-              ),
       ),
     );
   }
@@ -148,9 +218,9 @@ class _ProductDetail extends State<ProductDetail> {
       children: [
         Text(
           product!.name,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Row(
@@ -246,7 +316,8 @@ class _ProductDetail extends State<ProductDetail> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.remove),
-                    onPressed: product!.inStock ? () => _changeQuantity(-1) : null,
+                    onPressed:
+                        product!.inStock ? () => _changeQuantity(-1) : null,
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -260,7 +331,8 @@ class _ProductDetail extends State<ProductDetail> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.add),
-                    onPressed: product!.inStock ? () => _changeQuantity(1) : null,
+                    onPressed:
+                        product!.inStock ? () => _changeQuantity(1) : null,
                   ),
                 ],
               ),
@@ -268,7 +340,7 @@ class _ProductDetail extends State<ProductDetail> {
           ],
         ),
         const SizedBox(height: 20),
-        
+
         // Action Buttons
         Row(
           children: [
@@ -286,7 +358,7 @@ class _ProductDetail extends State<ProductDetail> {
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Buy Now Button
             Expanded(
               flex: 3,
@@ -304,7 +376,7 @@ class _ProductDetail extends State<ProductDetail> {
             ),
           ],
         ),
-        
+
         if (!product!.inStock)
           Padding(
             padding: const EdgeInsets.only(top: 12),

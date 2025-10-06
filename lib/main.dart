@@ -131,6 +131,10 @@ class _AppWrapperState extends State<AppWrapper> {
       // Initialize authentication state
       await authProvider.initAuth();
 
+      // Initialize cart from SQLite database
+      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+      await cartProvider.initializeCart();
+
       setState(() {
         _isInitialized = true;
       });

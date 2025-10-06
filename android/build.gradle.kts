@@ -1,8 +1,8 @@
 // Top-level build file for configuration common to all sub-projects/modules
 
 plugins {
-    // Android Gradle Plugin
-    id("com.android.application") version "8.7.0" apply false
+    // Android Gradle Plugin (compatible with Gradle 7.6.4)
+    id("com.android.application") version "7.4.2" apply false
     // Kotlin plugin (matching the classpath version to avoid conflicts)
     id("org.jetbrains.kotlin.android") version "1.8.22" apply false
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/product_provider.dart';
+import '../providers/ssp_product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/product.dart';
 
@@ -22,14 +22,14 @@ class _ProductDetail extends State<ProductDetail> {
     final String? productId =
         ModalRoute.of(context)?.settings.arguments as String?;
     if (productId != null) {
-      final productProvider = Provider.of<ProductProvider>(
+      final productProvider = Provider.of<SSPProductProvider>(
         context,
         listen: false,
       );
 
-      // Load products if not already loaded
+      // Load SSP products if not already loaded
       if (productProvider.products.isEmpty && !productProvider.isLoading) {
-        productProvider.loadProducts().then((_) {
+        productProvider.loadProductsFromSSP().then((_) {
           if (mounted) {
             setState(() {
               product = productProvider.getProductById(productId);
@@ -89,7 +89,7 @@ class _ProductDetail extends State<ProductDetail> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ProductProvider>(
+    return Consumer<SSPProductProvider>(
       builder: (context, productProvider, child) {
         // Show loading while products are being fetched
         if (productProvider.isLoading) {
@@ -114,7 +114,7 @@ class _ProductDetail extends State<ProductDetail> {
                   Text(productProvider.error!),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => productProvider.loadProducts(),
+                    onPressed: () => productProvider.loadProductsFromSSP(),
                     child: const Text('Retry'),
                   ),
                 ],

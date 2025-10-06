@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_nav.dart';
-import '../providers/product_provider.dart';
+import '../providers/ssp_product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/product.dart';
 
@@ -16,18 +16,33 @@ class _ProductPageState extends State<ProductPage> {
   @override
   void initState() {
     super.initState();
-    // Load products when the screen initializes
+    // Load SSP products when the screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProductProvider>().loadProducts();
+      context.read<SSPProductProvider>().loadProductsFromSSP();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("eBrew Café")),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("eBrew Café"),
+            Text(
+              'Live SSP Data: http://16.171.119.252',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withOpacity(0.8),
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
       bottomNavigationBar: const BottomNav(currentIndex: 1),
-      body: Consumer<ProductProvider>(
+      body: Consumer<SSPProductProvider>(
         builder: (context, productProvider, child) {
           if (productProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -52,7 +67,7 @@ class _ProductPageState extends State<ProductPage> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => productProvider.loadProducts(),
+                    onPressed: () => productProvider.loadProductsFromSSP(),
                     child: const Text('Retry'),
                   ),
                 ],

@@ -6,6 +6,7 @@ import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/product_provider.dart';
+import 'providers/ssp_product_provider.dart';
 
 // Services
 import 'services/product_service.dart';
@@ -26,6 +27,7 @@ import 'screens/sensor_demo_screen.dart';
 import 'screens/camera_demo_screen.dart';
 import 'screens/location_details_screen.dart';
 import 'screens/checkout_page.dart';
+import 'screens/ssp_demo_products_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +46,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => SSPProductProvider()),
 
         // Service Providers
         Provider(create: (_) => ProductService()),
@@ -79,6 +82,7 @@ class MyApp extends StatelessWidget {
               '/camera-demo': (context) => const CameraDemoScreen(),
               '/location-details': (context) => const LocationDetailsScreen(),
               '/checkout': (context) => const CheckoutPage(),
+              '/ssp-demo-products': (context) => const SSPDemoProductsPage(),
             },
           );
         },

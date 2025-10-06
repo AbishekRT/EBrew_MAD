@@ -80,6 +80,10 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildPermissionsSection(),
               const SizedBox(height: 24),
 
+              // Demo Features
+              _buildDemoSection(),
+              const SizedBox(height: 24),
+
               // About Section
               _buildAboutSection(),
               const SizedBox(height: 24),
@@ -305,6 +309,39 @@ class _SettingsScreenState extends State<SettingsScreen>
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 Navigator.pushNamed(context, '/sensor-demo');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDemoSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.cloud, color: Colors.indigo),
+                const SizedBox(width: 8),
+                Text(
+                  'Demo Features',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.store),
+              title: const Text('SSP Products Demo'),
+              subtitle: const Text('View products from Server-Side Provider'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pushNamed(context, '/ssp-demo-products');
               },
             ),
           ],

@@ -1,9 +1,10 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file for configuration common to all sub-projects/modules
 
 plugins {
-    // Update the Android plugin version to match the classpath (8.7.0)
+    // Android Gradle Plugin
     id("com.android.application") version "8.7.0" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.25" apply false
+    // Kotlin plugin (matching the classpath version to avoid conflicts)
+    id("org.jetbrains.kotlin.android") version "1.8.22" apply false
 }
 
 allprojects {
@@ -13,13 +14,13 @@ allprojects {
     }
 }
 
-// Move build outputs to a common folder
-val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+// Redirect build outputs to a common folder
+val sharedBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
+rootProject.layout.buildDirectory.set(sharedBuildDir)
 
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
+    val subBuildDir: Directory = sharedBuildDir.dir(project.name)
+    project.layout.buildDirectory.set(subBuildDir)
     project.evaluationDependsOn(":app")
 }
 

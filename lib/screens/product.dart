@@ -192,8 +192,14 @@ class _ProductPageState extends State<ProductPage> {
   Widget _buildProductCard(Product product, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        print('🚀 Navigation - Tapping product: ${product.name} with ID: ${product.id}');
-        Navigator.pushNamed(context, '/product-detail', arguments: product.id.toString());
+        print(
+          '🚀 Navigation - Tapping product: ${product.name} with ID: ${product.id}',
+        );
+        Navigator.pushNamed(
+          context,
+          '/product-detail',
+          arguments: product.id.toString(),
+        );
       },
       child: Card(
         color: Theme.of(context).cardColor,

@@ -46,9 +46,13 @@ class SSPProductProvider with ChangeNotifier {
   Product? getProductById(dynamic id) {
     if (id == null) return null;
     final String idStr = id.toString();
-    print('🔍 SSPProvider - Looking for product with ID: $idStr (original: $id)');
+    print(
+      '🔍 SSPProvider - Looking for product with ID: $idStr (original: $id)',
+    );
     try {
-      final product = _products.firstWhere((product) => product.id.toString() == idStr);
+      final product = _products.firstWhere(
+        (product) => product.id.toString() == idStr,
+      );
       print('✅ SSPProvider - Found product: ${product.name}');
       return product;
     } catch (e) {

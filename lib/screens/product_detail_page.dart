@@ -34,7 +34,9 @@ class _ProductDetail extends State<ProductDetail> {
       print(
         '🎯 Found product: ${foundProduct?.name ?? "null"} with image: ${foundProduct?.image ?? "none"}',
       );
-      print('📊 Provider has ${productProvider.products.length} products loaded');
+      print(
+        '📊 Provider has ${productProvider.products.length} products loaded',
+      );
 
       if (foundProduct != null) {
         setState(() {
@@ -381,7 +383,7 @@ class _ProductDetail extends State<ProductDetail> {
   /// Build appropriate image widget based on image path
   Widget _buildProductImage(String imagePath, {double? width, double? height}) {
     print('🖼️ DetailPage - Building image for path: $imagePath');
-    
+
     // If it's a network URL (SSP image)
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       print('🌐 DetailPage - Using network image: $imagePath');
@@ -390,7 +392,9 @@ class _ProductDetail extends State<ProductDetail> {
         width: width,
         height: height,
         fit: BoxFit.cover,
-        key: Key('detail_img_${imagePath.hashCode}_${DateTime.now().microsecondsSinceEpoch}'),
+        key: Key(
+          'detail_img_${imagePath.hashCode}_${DateTime.now().microsecondsSinceEpoch}',
+        ),
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(

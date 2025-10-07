@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/user_database_service.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -21,8 +22,21 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _agreeToTerms = false;
 
   void _register() async {
-    if (_formKey.currentState!.validate() && _agreeToTerms) {
+    if (!_agreeToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must agree to the terms and conditions'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      // Clear any previous errors
+      authProvider.clearError();
 
       final success = await authProvider.register(
         _nameController.text.trim(),
@@ -32,27 +46,33 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       if (success && mounted) {
+        // Log out the user immediately after registration
+        await authProvider.logout();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Welcome to eBrew!'),
+            content: Text(
+              'Registration successful! Please login with your credentials.',
+            ),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
           ),
         );
-        Navigator.pushReplacementNamed(context, '/home');
-      } else if (mounted) {
+
+        // Navigate to login page instead of home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } else if (mounted && authProvider.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration failed. Please try again.'),
+          SnackBar(
+            content: Text(authProvider.error!),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
-    } else if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You must agree to the terms and conditions'),
-        ),
-      );
     }
   }
 
@@ -125,15 +145,17 @@ class _RegisterPageState extends State<RegisterPage> {
   TextFormField _buildPasswordField() {
     return TextFormField(
       controller: _passwordController,
-      decoration: _inputDecoration('Password', Icons.lock),
+      decoration: _inputDecoration('Password', Icons.lock).copyWith(
+        helperText: 'Must be at least 6 characters with letters and numbers',
+      ),
       obscureText: true,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Password cannot be empty';
-        } else if (value.length < 6) {
-          return 'Password must be at least 6 characters';
         }
-        return null;
+        // Use the database service validation
+        final message = UserDatabaseService.getPasswordStrengthMessage(value);
+        return message == 'Password is valid' ? null : message;
       },
     );
   }

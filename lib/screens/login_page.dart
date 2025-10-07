@@ -19,6 +19,9 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+      // Clear any previous errors
+      authProvider.clearError();
+
       final success = await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text,
@@ -26,11 +29,12 @@ class _LoginPageState extends State<LoginPage> {
 
       if (success && mounted) {
         Navigator.pushReplacementNamed(context, '/home');
-      } else if (mounted) {
+      } else if (mounted && authProvider.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login failed. Please check your credentials.'),
+          SnackBar(
+            content: Text(authProvider.error!),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

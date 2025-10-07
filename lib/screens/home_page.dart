@@ -1,13 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/bottom_nav.dart';
-import '../providers/product_provider.dart';
+import '../providers/ssp_product_provider.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../services/connectivity_service.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Load SSP products when home page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sspProvider = Provider.of<SSPProductProvider>(context, listen: false);
+      if (sspProvider.products.isEmpty) {
+        sspProvider.loadProductsFromSSP();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +71,30 @@ class HomePage extends StatelessWidget {
                   height: 250,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Hero image loading error: $error');
+                    return Container(
+                      height: 250,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Theme.of(context).primaryColor,
+                            Theme.of(context).primaryColor.withOpacity(0.8),
+                          ],
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.local_cafe,
+                          size: 64,
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 Container(
                   height: 250,
@@ -138,6 +179,72 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // New Arrivals Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('New Arrivals', style: sectionTitleStyle),
+            ),
+
+            const SizedBox(height: 12),
+            
+            // New Arrivals Products (show latest 4 products)
+            Consumer<SSPProductProvider>(
+              builder: (context, sspProvider, child) {
+                if (sspProvider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (sspProvider.error != null) {
+                  return Center(child: Text('Error loading new arrivals'));
+                }
+                final newArrivals = sspProvider.products.take(4).toList();
+                return Container(
+                  height: 200,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: newArrivals.length,
+                    itemBuilder: (context, index) {
+                      final product = newArrivals[index];
+                      return Container(
+                        width: 150,
+                        margin: const EdgeInsets.only(right: 12),
+                        child: Card(
+                          elevation: 4,
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: _buildProductImage(product),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      product.name,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'Rs. ${product.price.toStringAsFixed(0)}',
+                                      style: TextStyle(fontSize: 11, color: Colors.red[600]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+
             // Best Selling Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -146,10 +253,40 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Featured Products from ProductProvider
-            Consumer<ProductProvider>(
-              builder: (context, productProvider, child) {
-                final featuredProducts = productProvider.featuredProducts;
+            // Featured Products from SSP
+            Consumer<SSPProductProvider>(
+              builder: (context, sspProductProvider, child) {
+                // Handle loading state
+                if (sspProductProvider.isLoading) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                // Handle error state
+                if (sspProductProvider.error != null) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Error: ${sspProductProvider.error}'),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: () => sspProductProvider.loadProductsFromSSP(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                // Get middle products (skip first 4 for best sellers)
+                final allProducts = sspProductProvider.products;
+                final featuredProducts = allProducts.skip(4).take(5).toList();
 
                 if (featuredProducts.isEmpty) {
                   return const Padding(
@@ -259,18 +396,7 @@ class HomePage extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
-                    child: Image.asset(
-                      product.image,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: double.infinity,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.local_cafe, size: 50),
-                        );
-                      },
-                    ),
+                    child: _buildProductImage(product),
                   ),
                 ),
                 Expanded(
@@ -302,46 +428,7 @@ class HomePage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  size: 14,
-                                  color: Colors.amber[600],
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  product.rating.toString(),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color:
-                                        isDarkMode
-                                            ? Colors.orange[200]
-                                            : Colors.brown[700],
-                                  ),
-                                ),
-                                const Spacer(),
-                                if (!product.inStock)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 1,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                    child: Text(
-                                      'Out',
-                                      style: TextStyle(
-                                        fontSize: 8,
-                                        color: Colors.red[600],
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                            // Rating and stock not available from SSP
                           ],
                         ),
                       ],
@@ -350,6 +437,67 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Build appropriate image widget for products (same logic as product page)
+  /// Build appropriate image widget for products (same logic as product page)
+  Widget _buildProductImage(Product product) {
+    print('🏠 Home: Building image for ID: ${product.id}, Name: ${product.name}');
+    print('🏠 Home: Image URL: ${product.image}');
+    if (product.image.startsWith('http')) {
+      // Use a unique key and force no caching to ensure unique images
+      return Container(
+        key: Key('home_img_${product.id}_${DateTime.now().microsecondsSinceEpoch}'),
+        width: double.infinity,
+        height: 150,
+        child: Image.network(
+          product.image,
+          fit: BoxFit.cover,
+          cacheWidth: null, // Disable caching
+          cacheHeight: null,
+          errorBuilder: (context, error, stackTrace) {
+            print('Home: Failed to load network image: ${product.image}');
+            return _buildAssetImageFallback(product);
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+        ),
+      );
+    }
+    return _buildAssetImageFallback(product);
+  }
+
+  /// Build asset image fallback
+  Widget _buildAssetImageFallback(Product product) {
+    return Image.asset(
+      'assets/${product.image}',
+      width: double.infinity,
+      height: 150,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: double.infinity,
+          height: 150,
+          color: Colors.grey[300],
+          child: Icon(
+            Icons.image_not_supported,
+            size: 50,
+            color: Colors.grey[600],
           ),
         );
       },

@@ -17,21 +17,44 @@ class ConnectivityService with ChangeNotifier {
   Future<void> initialize() async {
     final Connectivity connectivity = Connectivity();
 
-    // Check initial connectivity status
-    final List<ConnectivityResult> results =
-        await connectivity.checkConnectivity();
-    _connectionStatus =
-        results.isNotEmpty ? results.first : ConnectivityResult.none;
-    _updateConnectionStatus(_connectionStatus);
-
-    // Listen to connectivity changes
-    _connectivitySubscription = connectivity.onConnectivityChanged.listen((
-      List<ConnectivityResult> results,
-    ) {
+    try {
+      // Check initial connectivity status
+      final List<ConnectivityResult> results =
+          await connectivity.checkConnectivity();
       _connectionStatus =
           results.isNotEmpty ? results.first : ConnectivityResult.none;
-      _updateConnectionStatus(_connectionStatus);
-    });
+      
+      // For Flutter Web, connectivity_plus might not work properly
+      // If we get 'none' but we're on web, assume we're connected
+      if (kIsWeb && _connectionStatus == ConnectivityResult.none) {
+        _connectionStatus = ConnectivityResult.wifi; // Assume WiFi connection for web
+        _isConnected = true;
+        print('Web platform detected - assuming connectivity');
+      } else {
+        _updateConnectionStatus(_connectionStatus);
+      }
+
+      // Listen to connectivity changes
+      _connectivitySubscription = connectivity.onConnectivityChanged.listen((
+        List<ConnectivityResult> results,
+      ) {
+        _connectionStatus =
+            results.isNotEmpty ? results.first : ConnectivityResult.none;
+        
+        // For Flutter Web, override connectivity detection
+        if (kIsWeb && _connectionStatus == ConnectivityResult.none) {
+          _connectionStatus = ConnectivityResult.wifi;
+        }
+        _updateConnectionStatus(_connectionStatus);
+      });
+    } catch (e) {
+      // If connectivity check fails, assume connected for web platform
+      if (kIsWeb) {
+        _connectionStatus = ConnectivityResult.wifi;
+        _isConnected = true;
+        print('Connectivity check failed on web - assuming connected');
+      }
+    }
   }
 
   /// Update connection status and notify listeners

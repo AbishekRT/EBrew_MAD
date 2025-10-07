@@ -15,13 +15,14 @@ class SSPProductProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  List<Product> get featuredProducts =>
-      _products.where((p) => p.rating >= 4.5).toList();
+  // Since SSP doesn't provide ratings, we'll use different logic
+  List<Product> get featuredProducts => _products.take(6).toList();
 
-  List<Product> get bestSellers =>
-      _products.where((p) => p.rating >= 4.0).take(6).toList();
+  List<Product> get bestSellers => _products.skip(2).take(5).toList();
 
   List<Product> get newArrivals => _products.take(4).toList();
+
+  List<Product> get allProducts => _products;
 
   /// Load products from SSP
   Future<void> loadProductsFromSSP() async {

@@ -30,14 +30,6 @@ class _ProductPageState extends State<ProductPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text("eBrew Café"),
-            Text(
-              'Live SSP Data: http://16.171.119.252',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withOpacity(0.8),
-                fontWeight: FontWeight.normal,
-              ),
-            ),
           ],
         ),
       ),
@@ -137,24 +129,12 @@ class _ProductPageState extends State<ProductPage> {
 
                       const SizedBox(height: 16),
 
-                      // Product Categories
+                      // All Products Section
                       _buildProductSection(
                         context,
-                        "Featured Collection",
+                        "All Products (${productProvider.products.length})",
                         orientation,
-                        productProvider.featuredProducts,
-                      ),
-                      _buildProductSection(
-                        context,
-                        "Best Sellers",
-                        orientation,
-                        productProvider.bestSellers,
-                      ),
-                      _buildProductSection(
-                        context,
-                        "New Arrivals",
-                        orientation,
-                        productProvider.newArrivals,
+                        productProvider.products,
                       ),
                     ],
                   );
@@ -224,13 +204,7 @@ class _ProductPageState extends State<ProductPage> {
           child: Column(
             children: [
               Expanded(
-                child: Image.asset(
-                  product.image,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.local_cafe, size: 48);
-                  },
-                ),
+                child: _buildProductImage(product),
               ),
               const SizedBox(height: 8),
               Text(
@@ -243,48 +217,31 @@ class _ProductPageState extends State<ProductPage> {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Rs. ${product.price.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red[600],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber[600]),
-                      Text(
-                        product.rating.toString(),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ],
+              Text(
+                'Rs. ${product.price.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red[600],
+                ),
               ),
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed:
-                      product.inStock
-                          ? () {
-                            context.read<CartProvider>().addToCart(product);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${product.name} added to cart'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          }
-                          : null,
+                  onPressed: () {
+                    context.read<CartProvider>().addToCart(product);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${product.name} added to cart'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.add_shopping_cart, size: 16),
-                  label: Text(
-                    product.inStock ? 'Add' : 'Out of Stock',
-                    style: const TextStyle(fontSize: 12),
+                  label: const Text(
+                    'Add to Cart',
+                    style: TextStyle(fontSize: 12),
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -298,6 +255,66 @@ class _ProductPageState extends State<ProductPage> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Build appropriate image widget based on image path
+  Widget _buildProductImage(Product product) {
+    print('🖼️ Building image for Product ID: ${product.id}, Name: ${product.name}');
+    print('🔗 Image URL: ${product.image}');
+    if (product.image.startsWith('http')) {
+      // Use a unique key and force no caching to ensure unique images
+      return Container(
+        key: Key('product_img_${product.id}_${DateTime.now().microsecondsSinceEpoch}'),
+        width: double.infinity,
+        height: 200,
+        child: Image.network(
+          product.image,
+          fit: BoxFit.cover,
+          cacheWidth: null, // Disable caching
+          cacheHeight: null,
+          errorBuilder: (context, error, stackTrace) {
+            print('Failed to load network image: ${product.image}');
+            return _buildAssetImageFallback(product);
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            );
+          },
+        ),
+      );
+    }
+    return _buildAssetImageFallback(product);
+  }
+
+  /// Build asset image fallback
+  Widget _buildAssetImageFallback(Product product) {
+    return Image.asset(
+      'assets/${product.image}',
+      width: double.infinity,
+      height: 200,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: double.infinity,
+          height: 200,
+          color: Colors.grey[300],
+          child: Icon(
+            Icons.image_not_supported,
+            size: 50,
+            color: Colors.grey[600],
+          ),
+        );
+      },
     );
   }
 }

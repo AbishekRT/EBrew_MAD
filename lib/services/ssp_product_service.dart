@@ -60,9 +60,11 @@ class SSPProductService {
         final mappedProducts =
             productsJson.map((json) => _mapSSPProductToLocal(json)).toList();
         print('SSP: Successfully mapped ${mappedProducts.length} products');
-        print(
-          'SSP: First product name: ${mappedProducts.isNotEmpty ? mappedProducts[0].name : "None"}',
-        );
+        
+        // Debug: Print first few products with their image URLs
+        for (int i = 0; i < mappedProducts.length && i < 5; i++) {
+          print('SSP: Product ${i + 1}: ID=${mappedProducts[i].id}, Name=${mappedProducts[i].name}, Image=${mappedProducts[i].image}');
+        }
         return mappedProducts;
       } else {
         throw Exception(
@@ -90,11 +92,11 @@ class SSPProductService {
       price: _parsePrice(
         sspProduct['Price'] ?? sspProduct['price'] ?? sspProduct['cost'] ?? 0,
       ),
-      image:
+      image: _buildImageUrl(
           sspProduct['Image']?.toString() ??
           sspProduct['image']?.toString() ??
           sspProduct['imageUrl']?.toString() ??
-          'assets/1.png',
+          '1.png'),
       category:
           sspProduct['Category']?.toString() ??
           sspProduct['category']?.toString() ??
@@ -118,17 +120,8 @@ class SSPProductService {
           sspProduct['origin']?.toString() ??
           sspProduct['country']?.toString() ??
           'Unknown',
-      rating: _parseRating(
-        sspProduct['Rating'] ??
-            sspProduct['rating'] ??
-            sspProduct['score'] ??
-            4.0,
-      ),
-      inStock:
-          sspProduct['InStock'] ??
-          sspProduct['inStock'] ??
-          sspProduct['available'] ??
-          true,
+      rating: 0.0, // SSP doesn't provide ratings
+      inStock: true, // SSP doesn't provide stock status, assume available
     );
   }
 
@@ -138,11 +131,39 @@ class SSPProductService {
     return 0.0;
   }
 
-  double _parseRating(dynamic rating) {
-    if (rating is num) return rating.toDouble().clamp(0.0, 5.0);
-    if (rating is String)
-      return (double.tryParse(rating) ?? 4.0).clamp(0.0, 5.0);
-    return 4.0;
+
+
+  /// Build proper image URL for SSP images
+  String _buildImageUrl(String imagePath) {
+    String finalUrl;
+    
+    // If it's already a full URL, return as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      finalUrl = imagePath;
+    }
+    // Handle different image path formats from SSP
+    else if (imagePath.contains('/') || imagePath.endsWith('.png') || imagePath.endsWith('.jpg') || imagePath.endsWith('.jpeg')) {
+      // If path already contains a directory (like 'images/filename.jpg'), use as-is
+      if (imagePath.startsWith('images/')) {
+        finalUrl = '$_baseUrl/$imagePath';
+      } else {
+        // Standard filename like '1.png'
+        finalUrl = '$_baseUrl/images/$imagePath';
+      }
+      // Add unique timestamp to prevent caching issues
+      finalUrl += '?t=${DateTime.now().millisecondsSinceEpoch}&f=${imagePath.hashCode.abs()}';
+    }
+    // Fallback to local asset
+    else if (imagePath.startsWith('assets/')) {
+      finalUrl = imagePath;
+    }
+    // Default fallback
+    else {
+      finalUrl = 'assets/${imagePath.replaceAll(RegExp(r'^[^a-zA-Z0-9.]'), '')}';
+    }
+    
+    print('SSP: Image URL mapping: $imagePath -> $finalUrl');
+    return finalUrl;
   }
 
   /// Fetch single product by ID from SSP

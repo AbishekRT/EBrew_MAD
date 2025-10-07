@@ -21,23 +21,38 @@ class _ProductDetail extends State<ProductDetail> {
     // Get product ID from route arguments
     final String? productId =
         ModalRoute.of(context)?.settings.arguments as String?;
+    print('🔍 Product Detail: Loading product with ID: $productId');
+    
     if (productId != null) {
       final productProvider = Provider.of<SSPProductProvider>(
         context,
         listen: false,
       );
 
-      // Load SSP products if not already loaded
-      if (productProvider.products.isEmpty && !productProvider.isLoading) {
-        productProvider.loadProductsFromSSP().then((_) {
-          if (mounted) {
-            setState(() {
-              product = productProvider.getProductById(productId);
-            });
-          }
+      // Always try to find the product first
+      Product? foundProduct = productProvider.getProductById(productId);
+      print('🎯 Found product: ${foundProduct?.name ?? "null"} with image: ${foundProduct?.image ?? "none"}');
+      
+      if (foundProduct != null) {
+        setState(() {
+          product = foundProduct;
         });
+        print('✅ Product set: ${product?.name} - ${product?.image}');
       } else {
-        product = productProvider.getProductById(productId);
+        print('⚠️ Product not found in provider, products count: ${productProvider.products.length}');
+        if (productProvider.products.isEmpty && !productProvider.isLoading) {
+          // Load SSP products if not already loaded
+          print('🔄 Loading products from SSP...');
+          productProvider.loadProductsFromSSP().then((_) {
+            if (mounted) {
+              final refreshedProduct = productProvider.getProductById(productId);
+              print('🔄 After reload, found: ${refreshedProduct?.name ?? "null"}');
+              setState(() {
+                product = refreshedProduct;
+              });
+            }
+          });
+        }
       }
     }
   }
@@ -194,19 +209,10 @@ class _ProductDetail extends State<ProductDetail> {
     return Center(
       child: Hero(
         tag: 'product-${product!.id}',
-        child: Image.asset(
+        child: _buildProductImage(
           product!.image,
           width: 250,
           height: 250,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 250,
-              height: 250,
-              color: Colors.grey[300],
-              child: const Icon(Icons.local_cafe, size: 64),
-            );
-          },
         ),
       ),
     );
@@ -234,34 +240,11 @@ class _ProductDetail extends State<ProductDetail> {
               ),
             ),
             const Spacer(),
-            Row(
-              children: [
-                Icon(Icons.star, color: Colors.amber[600], size: 20),
-                const SizedBox(width: 4),
-                Text(
-                  product!.rating.toString(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+            // Rating not available from SSP
           ],
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: product!.inStock ? Colors.green[100] : Colors.red[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            product!.inStock ? 'In Stock' : 'Out of Stock',
-            style: TextStyle(
-              color: product!.inStock ? Colors.green[800] : Colors.red[800],
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
+        // Stock status not available from SSP
         const SizedBox(height: 16),
         Text(
           product!.description,
@@ -316,8 +299,7 @@ class _ProductDetail extends State<ProductDetail> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.remove),
-                    onPressed:
-                        product!.inStock ? () => _changeQuantity(-1) : null,
+                    onPressed: () => _changeQuantity(-1),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -331,8 +313,7 @@ class _ProductDetail extends State<ProductDetail> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.add),
-                    onPressed:
-                        product!.inStock ? () => _changeQuantity(1) : null,
+                    onPressed: () => _changeQuantity(1),
                   ),
                 ],
               ),
@@ -348,7 +329,7 @@ class _ProductDetail extends State<ProductDetail> {
             Expanded(
               flex: 2,
               child: OutlinedButton.icon(
-                onPressed: product!.inStock ? _addToCart : null,
+                onPressed: _addToCart,
                 icon: const Icon(Icons.add_shopping_cart),
                 label: const Text('Add to Cart'),
                 style: OutlinedButton.styleFrom(
@@ -363,7 +344,7 @@ class _ProductDetail extends State<ProductDetail> {
             Expanded(
               flex: 3,
               child: ElevatedButton.icon(
-                onPressed: product!.inStock ? _buyNow : null,
+                onPressed: _buyNow,
                 icon: const Icon(Icons.shopping_bag),
                 label: const Text('Buy Now'),
                 style: ElevatedButton.styleFrom(
@@ -390,5 +371,67 @@ class _ProductDetail extends State<ProductDetail> {
           ),
       ],
     );
+  }
+
+  /// Build appropriate image widget based on image path
+  Widget _buildProductImage(String imagePath, {double? width, double? height}) {
+    // If it's a network URL (SSP image)
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return Image.network(
+        imagePath,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: width,
+            height: height,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / 
+                      loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback to local asset if network image fails
+          return Image.asset(
+            'assets/1.png',
+            width: width,
+            height: height,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: width ?? 250,
+                height: height ?? 250,
+                color: Colors.grey[300],
+                child: const Icon(Icons.local_cafe, size: 64),
+              );
+            },
+          );
+        },
+      );
+    } 
+    // If it's a local asset
+    else {
+      return Image.asset(
+        imagePath,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: width ?? 250,
+            height: height ?? 250,
+            color: Colors.grey[300],
+            child: const Icon(Icons.local_cafe, size: 64),
+          );
+        },
+      );
+    }
   }
 }

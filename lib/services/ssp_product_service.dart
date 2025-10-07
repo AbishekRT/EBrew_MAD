@@ -60,10 +60,12 @@ class SSPProductService {
         final mappedProducts =
             productsJson.map((json) => _mapSSPProductToLocal(json)).toList();
         print('SSP: Successfully mapped ${mappedProducts.length} products');
-        
+
         // Debug: Print first few products with their image URLs
         for (int i = 0; i < mappedProducts.length && i < 5; i++) {
-          print('SSP: Product ${i + 1}: ID=${mappedProducts[i].id}, Name=${mappedProducts[i].name}, Image=${mappedProducts[i].image}');
+          print(
+            'SSP: Product ${i + 1}: ID=${mappedProducts[i].id}, Name=${mappedProducts[i].name}, Image=${mappedProducts[i].image}',
+          );
         }
         return mappedProducts;
       } else {
@@ -93,10 +95,11 @@ class SSPProductService {
         sspProduct['Price'] ?? sspProduct['price'] ?? sspProduct['cost'] ?? 0,
       ),
       image: _buildImageUrl(
-          sspProduct['Image']?.toString() ??
-          sspProduct['image']?.toString() ??
-          sspProduct['imageUrl']?.toString() ??
-          '1.png'),
+        sspProduct['Image']?.toString() ??
+            sspProduct['image']?.toString() ??
+            sspProduct['imageUrl']?.toString() ??
+            '1.png',
+      ),
       category:
           sspProduct['Category']?.toString() ??
           sspProduct['category']?.toString() ??
@@ -131,18 +134,19 @@ class SSPProductService {
     return 0.0;
   }
 
-
-
   /// Build proper image URL for SSP images
   String _buildImageUrl(String imagePath) {
     String finalUrl;
-    
+
     // If it's already a full URL, return as-is
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       finalUrl = imagePath;
     }
     // Handle different image path formats from SSP
-    else if (imagePath.contains('/') || imagePath.endsWith('.png') || imagePath.endsWith('.jpg') || imagePath.endsWith('.jpeg')) {
+    else if (imagePath.contains('/') ||
+        imagePath.endsWith('.png') ||
+        imagePath.endsWith('.jpg') ||
+        imagePath.endsWith('.jpeg')) {
       // If path already contains a directory (like 'images/filename.jpg'), use as-is
       if (imagePath.startsWith('images/')) {
         finalUrl = '$_baseUrl/$imagePath';
@@ -151,7 +155,8 @@ class SSPProductService {
         finalUrl = '$_baseUrl/images/$imagePath';
       }
       // Add unique timestamp to prevent caching issues
-      finalUrl += '?t=${DateTime.now().millisecondsSinceEpoch}&f=${imagePath.hashCode.abs()}';
+      finalUrl +=
+          '?t=${DateTime.now().millisecondsSinceEpoch}&f=${imagePath.hashCode.abs()}';
     }
     // Fallback to local asset
     else if (imagePath.startsWith('assets/')) {
@@ -159,9 +164,10 @@ class SSPProductService {
     }
     // Default fallback
     else {
-      finalUrl = 'assets/${imagePath.replaceAll(RegExp(r'^[^a-zA-Z0-9.]'), '')}';
+      finalUrl =
+          'assets/${imagePath.replaceAll(RegExp(r'^[^a-zA-Z0-9.]'), '')}';
     }
-    
+
     print('SSP: Image URL mapping: $imagePath -> $finalUrl');
     return finalUrl;
   }

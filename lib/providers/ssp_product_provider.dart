@@ -42,11 +42,17 @@ class SSPProductProvider with ChangeNotifier {
     }
   }
 
-  /// Get product by ID
-  Product? getProductById(String id) {
+  /// Get product by ID - handles both string and numeric IDs
+  Product? getProductById(dynamic id) {
+    if (id == null) return null;
+    final String idStr = id.toString();
+    print('🔍 SSPProvider - Looking for product with ID: $idStr (original: $id)');
     try {
-      return _products.firstWhere((product) => product.id == id);
+      final product = _products.firstWhere((product) => product.id.toString() == idStr);
+      print('✅ SSPProvider - Found product: ${product.name}');
+      return product;
     } catch (e) {
+      print('❌ SSPProvider - Product not found for ID: $idStr');
       return null;
     }
   }

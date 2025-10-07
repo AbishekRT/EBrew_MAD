@@ -23,11 +23,12 @@ class ConnectivityService with ChangeNotifier {
           await connectivity.checkConnectivity();
       _connectionStatus =
           results.isNotEmpty ? results.first : ConnectivityResult.none;
-      
+
       // For Flutter Web, connectivity_plus might not work properly
       // If we get 'none' but we're on web, assume we're connected
       if (kIsWeb && _connectionStatus == ConnectivityResult.none) {
-        _connectionStatus = ConnectivityResult.wifi; // Assume WiFi connection for web
+        _connectionStatus =
+            ConnectivityResult.wifi; // Assume WiFi connection for web
         _isConnected = true;
         print('Web platform detected - assuming connectivity');
       } else {
@@ -40,7 +41,7 @@ class ConnectivityService with ChangeNotifier {
       ) {
         _connectionStatus =
             results.isNotEmpty ? results.first : ConnectivityResult.none;
-        
+
         // For Flutter Web, override connectivity detection
         if (kIsWeb && _connectionStatus == ConnectivityResult.none) {
           _connectionStatus = ConnectivityResult.wifi;

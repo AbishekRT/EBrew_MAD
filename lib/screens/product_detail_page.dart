@@ -22,7 +22,7 @@ class _ProductDetail extends State<ProductDetail> {
     final String? productId =
         ModalRoute.of(context)?.settings.arguments as String?;
     print('🔍 Product Detail: Loading product with ID: $productId');
-    
+
     if (productId != null) {
       final productProvider = Provider.of<SSPProductProvider>(
         context,
@@ -31,22 +31,31 @@ class _ProductDetail extends State<ProductDetail> {
 
       // Always try to find the product first
       Product? foundProduct = productProvider.getProductById(productId);
-      print('🎯 Found product: ${foundProduct?.name ?? "null"} with image: ${foundProduct?.image ?? "none"}');
-      
+      print(
+        '🎯 Found product: ${foundProduct?.name ?? "null"} with image: ${foundProduct?.image ?? "none"}',
+      );
+      print('📊 Provider has ${productProvider.products.length} products loaded');
+
       if (foundProduct != null) {
         setState(() {
           product = foundProduct;
         });
         print('✅ Product set: ${product?.name} - ${product?.image}');
       } else {
-        print('⚠️ Product not found in provider, products count: ${productProvider.products.length}');
+        print(
+          '⚠️ Product not found in provider, products count: ${productProvider.products.length}',
+        );
         if (productProvider.products.isEmpty && !productProvider.isLoading) {
           // Load SSP products if not already loaded
           print('🔄 Loading products from SSP...');
           productProvider.loadProductsFromSSP().then((_) {
             if (mounted) {
-              final refreshedProduct = productProvider.getProductById(productId);
-              print('🔄 After reload, found: ${refreshedProduct?.name ?? "null"}');
+              final refreshedProduct = productProvider.getProductById(
+                productId,
+              );
+              print(
+                '🔄 After reload, found: ${refreshedProduct?.name ?? "null"}',
+              );
               setState(() {
                 product = refreshedProduct;
               });
@@ -209,11 +218,7 @@ class _ProductDetail extends State<ProductDetail> {
     return Center(
       child: Hero(
         tag: 'product-${product!.id}',
-        child: _buildProductImage(
-          product!.image,
-          width: 250,
-          height: 250,
-        ),
+        child: _buildProductImage(product!.image, width: 250, height: 250),
       ),
     );
   }
@@ -375,13 +380,17 @@ class _ProductDetail extends State<ProductDetail> {
 
   /// Build appropriate image widget based on image path
   Widget _buildProductImage(String imagePath, {double? width, double? height}) {
+    print('🖼️ DetailPage - Building image for path: $imagePath');
+    
     // If it's a network URL (SSP image)
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      print('🌐 DetailPage - Using network image: $imagePath');
       return Image.network(
         imagePath,
         width: width,
         height: height,
         fit: BoxFit.cover,
+        key: Key('detail_img_${imagePath.hashCode}_${DateTime.now().microsecondsSinceEpoch}'),
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
@@ -389,15 +398,17 @@ class _ProductDetail extends State<ProductDetail> {
             height: height,
             child: Center(
               child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / 
-                      loadingProgress.expectedTotalBytes!
-                    : null,
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
               ),
             ),
           );
         },
         errorBuilder: (context, error, stackTrace) {
+          print('❌ DetailPage - Network image failed: $imagePath -> $error');
           // Fallback to local asset if network image fails
           return Image.asset(
             'assets/1.png',
@@ -405,6 +416,7 @@ class _ProductDetail extends State<ProductDetail> {
             height: height,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
+              print('❌ DetailPage - Asset fallback also failed');
               return Container(
                 width: width ?? 250,
                 height: height ?? 250,
@@ -415,15 +427,17 @@ class _ProductDetail extends State<ProductDetail> {
           );
         },
       );
-    } 
+    }
     // If it's a local asset
     else {
+      print('📁 DetailPage - Using local asset: assets/$imagePath');
       return Image.asset(
-        imagePath,
+        'assets/$imagePath',
         width: width,
         height: height,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
+          print('❌ DetailPage - Local asset failed: assets/$imagePath');
           return Container(
             width: width ?? 250,
             height: height ?? 250,

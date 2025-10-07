@@ -28,9 +28,7 @@ class _ProductPageState extends State<ProductPage> {
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("eBrew Café"),
-          ],
+          children: [const Text("eBrew Café")],
         ),
       ),
       bottomNavigationBar: const BottomNav(currentIndex: 1),
@@ -194,7 +192,8 @@ class _ProductPageState extends State<ProductPage> {
   Widget _buildProductCard(Product product, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(context, '/product-detail', arguments: product.id);
+        print('🚀 Navigation - Tapping product: ${product.name} with ID: ${product.id}');
+        Navigator.pushNamed(context, '/product-detail', arguments: product.id.toString());
       },
       child: Card(
         color: Theme.of(context).cardColor,
@@ -203,9 +202,7 @@ class _ProductPageState extends State<ProductPage> {
           padding: const EdgeInsets.all(12),
           child: Column(
             children: [
-              Expanded(
-                child: _buildProductImage(product),
-              ),
+              Expanded(child: _buildProductImage(product)),
               const SizedBox(height: 8),
               Text(
                 product.name,
@@ -260,12 +257,16 @@ class _ProductPageState extends State<ProductPage> {
 
   /// Build appropriate image widget based on image path
   Widget _buildProductImage(Product product) {
-    print('🖼️ Building image for Product ID: ${product.id}, Name: ${product.name}');
+    print(
+      '🖼️ Building image for Product ID: ${product.id}, Name: ${product.name}',
+    );
     print('🔗 Image URL: ${product.image}');
     if (product.image.startsWith('http')) {
       // Use a unique key and force no caching to ensure unique images
       return Container(
-        key: Key('product_img_${product.id}_${DateTime.now().microsecondsSinceEpoch}'),
+        key: Key(
+          'product_img_${product.id}_${DateTime.now().microsecondsSinceEpoch}',
+        ),
         width: double.infinity,
         height: 200,
         child: Image.network(
@@ -283,10 +284,11 @@ class _ProductPageState extends State<ProductPage> {
             }
             return Center(
               child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
               ),
             );
           },

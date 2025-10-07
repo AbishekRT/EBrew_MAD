@@ -19,7 +19,10 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     // Load SSP products when home page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final sspProvider = Provider.of<SSPProductProvider>(context, listen: false);
+      final sspProvider = Provider.of<SSPProductProvider>(
+        context,
+        listen: false,
+      );
       if (sspProvider.products.isEmpty) {
         sspProvider.loadProductsFromSSP();
       }
@@ -186,7 +189,7 @@ class _HomePageState extends State<HomePage> {
             ),
 
             const SizedBox(height: 12),
-            
+
             // New Arrivals Products (show latest 4 products)
             Consumer<SSPProductProvider>(
               builder: (context, sspProvider, child) {
@@ -212,23 +215,27 @@ class _HomePageState extends State<HomePage> {
                           elevation: 4,
                           child: Column(
                             children: [
-                              Expanded(
-                                child: _buildProductImage(product),
-                              ),
+                              Expanded(child: _buildProductImage(product)),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Column(
                                   children: [
                                     Text(
                                       product.name,
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       textAlign: TextAlign.center,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
                                       'Rs. ${product.price.toStringAsFixed(0)}',
-                                      style: TextStyle(fontSize: 11, color: Colors.red[600]),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.red[600],
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -275,7 +282,8 @@ class _HomePageState extends State<HomePage> {
                           Text('Error: ${sspProductProvider.error}'),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () => sspProductProvider.loadProductsFromSSP(),
+                            onPressed:
+                                () => sspProductProvider.loadProductsFromSSP(),
                             child: const Text('Retry'),
                           ),
                         ],
@@ -446,12 +454,16 @@ class _HomePageState extends State<HomePage> {
   /// Build appropriate image widget for products (same logic as product page)
   /// Build appropriate image widget for products (same logic as product page)
   Widget _buildProductImage(Product product) {
-    print('🏠 Home: Building image for ID: ${product.id}, Name: ${product.name}');
+    print(
+      '🏠 Home: Building image for ID: ${product.id}, Name: ${product.name}',
+    );
     print('🏠 Home: Image URL: ${product.image}');
     if (product.image.startsWith('http')) {
       // Use a unique key and force no caching to ensure unique images
       return Container(
-        key: Key('home_img_${product.id}_${DateTime.now().microsecondsSinceEpoch}'),
+        key: Key(
+          'home_img_${product.id}_${DateTime.now().microsecondsSinceEpoch}',
+        ),
         width: double.infinity,
         height: 150,
         child: Image.network(
@@ -469,10 +481,11 @@ class _HomePageState extends State<HomePage> {
             }
             return Center(
               child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
+                value:
+                    loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
               ),
             );
           },
